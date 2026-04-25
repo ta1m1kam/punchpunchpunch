@@ -6,8 +6,16 @@
 <meta name="theme-color" content="#0a0a0f" />
 <meta name="description" content="スマホの加速度センサーでパンチの威力を測るパンチングマシーン。気合入れて殴れ！" />
 <meta property="og:title" content="PUNCH POWER!! - 加速度パンチングマシーン" />
-<meta property="og:description" content="スマホ握って思いっきり殴れ。お前のパンチ力は何点だ？" />
+<meta property="og:description" content="スマホ握って思いっきり殴れ。0–200 PWR / 20階層で「人間→超人」を判定。" />
 <meta property="og:type" content="website" />
+<meta property="og:image" content="https://ta1m1kam.github.io/punch-power/og/main.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:url" content="https://ta1m1kam.github.io/punch-power/" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="PUNCH POWER!! - 加速度パンチングマシーン" />
+<meta name="twitter:description" content="スマホ握って思いっきり殴れ。お前のパンチ力は何点だ？" />
+<meta name="twitter:image" content="https://ta1m1kam.github.io/punch-power/og/main.png" />
 <title>PUNCH POWER!! / 加速度パンチングマシーン</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='86'>🥊</text></svg>" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -1291,9 +1299,16 @@
   });
 
   // ---------- T-shirt QR ----------
+  // Build the challenge URL that points to /c/{level}/ landing page so
+  // OGP scrapers see a level-specific share image. Real users hit the
+  // landing's JS redirect and end up at the main app with params intact.
   function buildChallengeUrl(name, score) {
-    const u = new URL(location.origin + location.pathname);
-    u.searchParams.set('c', String(score));
+    const safeScore = Math.max(0, Math.min(200, parseInt(score, 10) || 0));
+    const level = Math.min(19, Math.floor(safeScore / 10));
+    // App root: strip "/c/{n}/" if currently on a landing page
+    const root = location.pathname.replace(/\/c\/\d+\/?$/, '/').replace(/\/?$/, '/');
+    const u = new URL(location.origin + root + 'c/' + level + '/');
+    u.searchParams.set('c', String(safeScore));
     if (name) u.searchParams.set('n', name);
     return u.toString();
   }
