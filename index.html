@@ -787,12 +787,11 @@
           <li>スマホを利き手でしっかり握る</li>
           <li>「READY!?」をタップ</li>
           <li>3-2-1で空気を全力パンチ！</li>
-          <li>「赤ちゃん」〜「人間兵器」の10ランクで判定</li>
+          <li>0〜200 PWRで判定。100超で超人階級突入</li>
         </ul>
 
         <button class="cta big" id="btn-start">READY!?</button>
         <p class="warn ja">⚠ 周囲・家具・人に当てない事。スマホは<u>絶対に手放さない</u>。<br/>初回はセンサー利用の許可が出ます。</p>
-        <span class="small-link" id="goTshirt">👕 Tシャツ用の挑戦URLを作る</span>
         <span class="small-link" id="resetHi">ハイスコアをリセット</span>
       </div>
     </section>
@@ -1318,7 +1317,6 @@
   }
 
   $('btn-tshirt').addEventListener('click', openTshirt);
-  $('goTshirt').addEventListener('click', openTshirt);
   $('btn-tBack').addEventListener('click', () => show(lastScore > 0 ? 'result' : 'start'));
   $('tName').addEventListener('input', () => {
     clearTimeout(window.__urlT);
