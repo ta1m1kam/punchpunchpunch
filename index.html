@@ -601,6 +601,28 @@
   .flash.go { animation: flashAnim 0.18s ease-out; }
   @keyframes flashAnim { 0% { opacity: 0.95; } 100% { opacity: 0; } }
 
+  /* Mute toggle */
+  .mute-btn {
+    position: fixed;
+    top: max(env(safe-area-inset-top), 14px);
+    left: 14px;
+    z-index: 6;
+    background: var(--ink);
+    border: 2px solid var(--yellow);
+    color: var(--yellow);
+    width: 40px; height: 40px;
+    border-radius: 0;
+    font-size: 18px;
+    display: grid; place-items: center;
+    cursor: pointer;
+    transform: rotate(-2deg);
+    user-select: none;
+    padding: 0;
+    line-height: 1;
+  }
+  .mute-btn:active { transform: rotate(-2deg) scale(0.92); }
+  .mute-btn.muted { color: rgba(245,245,245,0.5); border-color: rgba(245,245,245,0.3); }
+
   /* Highscore corner */
   .hi-score {
     position: fixed;
@@ -779,6 +801,7 @@
     <div class="grid"></div>
     <div class="halftone"></div>
 
+    <button class="mute-btn" id="muteBtn" aria-label="サウンド切替">🔊</button>
     <div class="hi-score">HI-SCORE <b id="hiscore">----</b></div>
 
     <!-- ============== START ============== -->
@@ -947,6 +970,138 @@
   const screens = ['start', 'challenge', 'countdown', 'measuring', 'result', 'tshirt', 'error'];
   const show = (name) => screens.forEach(s => $(s).classList.toggle('active', s === name));
 
+  // ---------- Audio (Web Audio API SFX/BGM) ----------
+  const MUTE_KEY = 'punch.mute.v1';
+  let muted = localStorage.getItem(MUTE_KEY) === '1';
+  let audioCtx = null;
+
+  function ensureAudio() {
+    if (!audioCtx) {
+      try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+      catch (e) { return null; }
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+  function audioOn() { return !muted && audioCtx && audioCtx.state === 'running'; }
+
+  function sfxTick(progress) {
+    if (!audioOn()) return;
+    const ctx = audioCtx; const t = ctx.currentTime;
+    const f = 700 + progress * 900;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'square';
+    o.frequency.setValueAtTime(f, t);
+    o.frequency.exponentialRampToValueAtTime(Math.max(120, f * 0.45), t + 0.045);
+    g.gain.setValueAtTime(0.07, t);
+    g.gain.exponentialRampToValueAtTime(0.0008, t + 0.06);
+    o.connect(g).connect(ctx.destination);
+    o.start(t); o.stop(t + 0.07);
+  }
+
+  function sfxShatter() {
+    if (!audioOn()) return;
+    const ctx = audioCtx; const t = ctx.currentTime;
+    // 1) White-noise burst → highpass (the crack)
+    const len = Math.floor(ctx.sampleRate * 0.55);
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 1.4);
+    const noise = ctx.createBufferSource(); noise.buffer = buf;
+    const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 2400;
+    const ng = ctx.createGain();
+    ng.gain.setValueAtTime(0.5, t);
+    ng.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+    noise.connect(hp).connect(ng).connect(ctx.destination);
+    noise.start(t);
+    // 2) Low thud (impact)
+    const th = ctx.createOscillator(), tg = ctx.createGain();
+    th.type = 'sine';
+    th.frequency.setValueAtTime(120, t);
+    th.frequency.exponentialRampToValueAtTime(38, t + 0.15);
+    tg.gain.setValueAtTime(0.55, t);
+    tg.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+    th.connect(tg).connect(ctx.destination);
+    th.start(t); th.stop(t + 0.2);
+    // 3) Tinkle shards (random high triangles)
+    for (let i = 0; i < 14; i++) {
+      const dt = 0.04 + Math.random() * 0.42;
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'triangle';
+      const f = 3500 + Math.random() * 4500;
+      o.frequency.setValueAtTime(f, t + dt);
+      o.frequency.exponentialRampToValueAtTime(f * 0.6, t + dt + 0.12);
+      g.gain.setValueAtTime(0.05, t + dt);
+      g.gain.exponentialRampToValueAtTime(0.0008, t + dt + 0.22);
+      o.connect(g).connect(ctx.destination);
+      o.start(t + dt); o.stop(t + dt + 0.24);
+    }
+  }
+
+  function sfxReveal(isSuper) {
+    if (!audioOn()) return;
+    const ctx = audioCtx; const t = ctx.currentTime;
+    // Punch impact thump
+    const o0 = ctx.createOscillator(), g0 = ctx.createGain();
+    o0.type = 'sine';
+    o0.frequency.setValueAtTime(110, t);
+    o0.frequency.exponentialRampToValueAtTime(40, t + 0.12);
+    g0.gain.setValueAtTime(0.55, t);
+    g0.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+    o0.connect(g0).connect(ctx.destination);
+    o0.start(t); o0.stop(t + 0.16);
+    // Chord stab — major triad (人間) or major7+9 (超人)
+    const notes = isSuper ? [261.63, 329.63, 392, 493.88, 587.33] : [261.63, 329.63, 392];
+    notes.forEach((freq, i) => {
+      const ts = t + 0.05 + i * 0.04;
+      const o = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter();
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(freq, ts);
+      f.type = 'lowpass';
+      f.frequency.setValueAtTime(700, ts);
+      f.frequency.linearRampToValueAtTime(2400, ts + 0.18);
+      g.gain.setValueAtTime(0, ts);
+      g.gain.linearRampToValueAtTime(0.10, ts + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.0008, ts + 0.7);
+      o.connect(f).connect(g).connect(ctx.destination);
+      o.start(ts); o.stop(ts + 0.75);
+    });
+  }
+
+  function sfxCountBeep(isGo) {
+    if (!audioOn()) return;
+    const ctx = audioCtx; const t = ctx.currentTime;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(isGo ? 1200 : 600, t);
+    g.gain.setValueAtTime(0.18, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + (isGo ? 0.35 : 0.12));
+    o.connect(g).connect(ctx.destination);
+    o.start(t); o.stop(t + (isGo ? 0.36 : 0.13));
+  }
+
+  function scheduleTicks(count, duration, p0 = 0, p1 = 1) {
+    if (!audioOn() || count <= 0) return;
+    for (let i = 0; i < count; i++) {
+      const k = i / Math.max(1, count - 1);
+      const progress = p0 + (p1 - p0) * k;
+      setTimeout(() => sfxTick(progress), Math.round(k * duration));
+    }
+  }
+
+  function renderMute() {
+    const b = $('muteBtn');
+    b.textContent = muted ? '🔇' : '🔊';
+    b.classList.toggle('muted', muted);
+  }
+  $('muteBtn').addEventListener('click', () => {
+    muted = !muted;
+    localStorage.setItem(MUTE_KEY, muted ? '1' : '0');
+    renderMute();
+    if (!muted) ensureAudio();
+  });
+  renderMute();
+
   // ---------- HiScore ----------
   const HI_KEY = 'punch.hi.v2';
   // v1 used a 100x scoring; v2 caps at 200. Old key is ignored.
@@ -978,6 +1133,7 @@
   }
 
   $('btn-accept').addEventListener('click', async () => {
+    ensureAudio();
     const status = await requestMotionPermission();
     if (status === 'denied' || status === 'unsupported') { showSensorErr(status); return; }
     runPunch();
@@ -1049,13 +1205,14 @@
   }
 
   $('btn-start').addEventListener('click', async () => {
+    ensureAudio();
     const status = await requestMotionPermission();
     if (status === 'denied' || status === 'unsupported') { showSensorErr(status); return; }
     runPunch();
   });
 
   $('btn-back').addEventListener('click', () => show(challenge ? 'challenge' : 'start'));
-  $('btn-retry').addEventListener('click', () => runPunch());
+  $('btn-retry').addEventListener('click', () => { ensureAudio(); runPunch(); });
 
   // ---------- Punch sequence ----------
   async function runPunch() {
@@ -1084,9 +1241,9 @@
       $('countNum').style.animation = 'none';
       void $('countNum').offsetWidth;
       $('countNum').style.animation = '';
-      if (n === 'GO!!') {
-        flashScreen();
-      }
+      const isGo = n === 'GO!!';
+      sfxCountBeep(isGo);
+      if (isGo) flashScreen();
       await sleep(750);
     }
 
@@ -1215,6 +1372,7 @@
     $('archetype').classList.toggle('super', lv.tier === '超人');
     $('verdict').textContent = lv.verdict;
     showImpact(lv.word);
+    sfxReveal(lv.tier === '超人');
 
     // battle
     const box = $('battleBox');
@@ -1251,11 +1409,16 @@
     const BREAK = 100;
     const totalDur = Math.max(700, Math.min(1700, 700 + target * 6));
     if (target < BREAK) {
+      // tick stream — pitch tracks final score
+      const tickN = Math.max(6, Math.min(22, Math.floor(target / 5)));
+      scheduleTicks(tickN, totalDur, 0, target / 200);
       await tween(el, 0, target, totalDur);
       return;
     }
     // Phase 1: 0 → 100
     const p1 = Math.round(totalDur * 0.55);
+    const tickN1 = Math.max(10, Math.min(22, Math.floor(BREAK / 5)));
+    scheduleTicks(tickN1, p1, 0, 0.5);
     await tween(el, 0, BREAK, p1);
     el.textContent = String(BREAK);
     if (onBreak) onBreak();
@@ -1266,6 +1429,8 @@
     if (target === BREAK) return;
     // Phase 2: 100 → target
     const p2 = Math.round(totalDur * 0.45);
+    const tickN2 = Math.max(6, Math.min(18, Math.floor((target - BREAK) / 6)));
+    scheduleTicks(tickN2, p2, 0.5, target / 200);
     await tween(el, BREAK, target, p2);
   }
 
@@ -1274,6 +1439,7 @@
     fx.classList.remove('show');
     void fx.offsetWidth;
     fx.classList.add('show');
+    sfxShatter();
     if (navigator.vibrate) try { navigator.vibrate([20, 30, 100, 20, 60]); } catch(e){}
     setTimeout(() => fx.classList.remove('show'), 1700);
   }
