@@ -1170,6 +1170,7 @@
   let baseline = 9.81;
   let listenersOn = false;
   let lastTilt = 0;
+  let samples = []; // collected motion samples during measure phase
 
   function onMotion(e) {
     const a = e.accelerationIncludingGravity || e.acceleration;
@@ -1181,6 +1182,7 @@
     if (dev > peak) peak = dev;
     if (measuring) {
       $('liveG').textContent = (peak / 9.81).toFixed(2);
+      samples.push({ t: performance.now(), x, y, z, mag, dev });
     }
     lastTilt = mag;
   }
@@ -1251,6 +1253,7 @@
     show('measuring');
     measuring = true;
     peak = 0; peakRaw = 0;
+    samples = [];
     $('liveG').textContent = '0.00';
 
     const DURATION = 2500;
@@ -1290,11 +1293,99 @@
   }
 
   // ---------- Score / Rank ----------
-  // peakDelta (m/s² over baseline) → 0-200 PWR
-  // 80 m/s² ≈ 200 (天井)、40 m/s² ≈ 100 (人間→超人ライン)
+  // ボクシング/格闘技研究に基づく評価ロジック:
+  //
+  // [Lan et al. 2022, Frontiers in Physiology]
+  //   Elite boxer の lead straight punch:
+  //     - peak fist velocity:   7.16 ± 0.48 m/s
+  //     - peak velocity 到達:    17 ± 2 ms
+  //     - movement time (start→impact): 45 ± 5 ms
+  //     - rate of force development: 88.6 N/ms
+  //   Junior は peak velocity 6.32 m/s、movement time 43ms。
+  //
+  // [Walilko et al. 2005, Br J Sports Med]
+  //   Heavyweight boxer の peak hand acceleration: 最大 520 m/s² (53G)。
+  //
+  // [IMU punch detection literature]
+  //   12 m/s² を「パンチ動作」最低閾値として使用 (重力差分の閾値)。
+  //
+  // 上記より:
+  //   - 12 m/s² 未満は「殴ってない」とみなしスコア=0
+  //   - peak rise time が 50ms 以下なら elite 級、 200ms 超は「スイング」扱い
+  //   - movement duration ~45-150ms が真のパンチ、 500ms+ は揺らしてるだけ
+  //   - 1軸方向支配率が高いほど directional な拳
+  //   - スマホ携帯時は拳直接計測より低いG値しか出ない → ゲインで底上げ
+  //     (peakDev≈123 m/s² ≈ 12.6G でスコア200天井)
   const SCORE_MAX = 200;
+  const PEAK_THRESHOLD = 12;   // m/s²: パンチ動作とみなす最低 (IMU literature)
+  const PHONE_GAIN = 1.8;      // peakDev=123(12.6G) で天井 — Walilko下限級
+
+  // 後方互換: 単一ピーク値だけのフォールバック
   function calcScore(peakDelta) {
-    return Math.max(0, Math.min(SCORE_MAX, Math.round(peakDelta * 2.5)));
+    if (peakDelta < PEAK_THRESHOLD) return 0;
+    const raw = (peakDelta - PEAK_THRESHOLD) * PHONE_GAIN;
+    return Math.max(0, Math.min(SCORE_MAX, Math.round(raw)));
+  }
+
+  // メイン評価: サンプル列を多要素で採点
+  function calcScoreFromSamples(samples) {
+    if (!samples || samples.length < 4) return 0;
+
+    // 1) ピーク検出
+    let peakIdx = 0;
+    for (let i = 1; i < samples.length; i++) {
+      if (samples[i].dev > samples[peakIdx].dev) peakIdx = i;
+    }
+    const peak = samples[peakIdx];
+    if (peak.dev < PEAK_THRESHOLD) return 0; // パンチですらない
+
+    // 2) 立ち上がり時間 (rise time)
+    //    Lan et al.: elite peak time = 17ms。スマホ込みで補正して
+    //    50ms 以内なら elite 級、 200ms 超は単なるスイング。
+    const threshold30 = peak.dev * 0.3;
+    let crossIdx = 0;
+    for (let i = peakIdx - 1; i >= 0; i--) {
+      if (samples[i].dev < threshold30) { crossIdx = i + 1; break; }
+    }
+    const riseTime = peak.t - samples[Math.max(0, Math.min(crossIdx, peakIdx))].t;
+    let riseFactor;
+    if (riseTime <= 50) riseFactor = 1.0;
+    else if (riseTime <= 200) riseFactor = 1.0 - (riseTime - 50) / 300; // 200ms で 0.5
+    else riseFactor = 0.4;
+
+    // 3) 単発ピーク評価 (shake penalty)
+    //    Lan et al. の movement time 45ms より、 200ms 以上離れた所に
+    //    別の高ピークがある = ガタガタ振りとみなし大幅減点。
+    const distantHits = samples.filter(s =>
+      s.dev > peak.dev * 0.7 && Math.abs(s.t - peak.t) > 200
+    );
+    const shakeFactor = Math.max(0.35, 1 - distantHits.length * 0.22);
+
+    // 4) 動作持続時間
+    //    50%peak を超える時間幅 = 真のパンチなら 50-200ms
+    const overHalf = samples.filter(s => s.dev > peak.dev * 0.5);
+    let durFactor = 1.0;
+    if (overHalf.length >= 2) {
+      const tMin = Math.min(...overHalf.map(s => s.t));
+      const tMax = Math.max(...overHalf.map(s => s.t));
+      const dur = tMax - tMin;
+      if (dur > 500) durFactor = 0.55;       // ずっと揺らしている
+      else if (dur > 300) durFactor = 0.75;
+      else if (dur < 25) durFactor = 0.85;   // 落としただけのスパイク?
+    }
+
+    // 5) 方向性 (axis dominance)
+    //    まっすぐ突き = 1軸支配。ぐるぐる振り = 等方。
+    const ax = Math.abs(peak.x), ay = Math.abs(peak.y), az = Math.abs(peak.z);
+    const maxAxis = Math.max(ax, ay, az);
+    const dirRatio = peak.mag > 0 ? maxAxis / peak.mag : 0;
+    // 等方 = 1/√3 ≈ 0.577、完全1軸 = 1.0。 0.7-1.0 にマッピング。
+    const dirFactor = Math.max(0.7, Math.min(1.0, (dirRatio - 0.58) * 2.4 + 0.7));
+
+    // 集計
+    const raw = (peak.dev - PEAK_THRESHOLD) * PHONE_GAIN;
+    const finalScore = raw * riseFactor * shakeFactor * durFactor * dirFactor;
+    return Math.max(0, Math.min(SCORE_MAX, Math.round(finalScore)));
   }
 
   // Lv 0-19 を10刻みで割当 (0-9→Lv0, 10-19→Lv1, ..., 190-200→Lv19)
@@ -1332,7 +1423,10 @@
   let lastScore = 0;
 
   async function showResult(peakDelta, peakMag) {
-    const score = calcScore(peakDelta);
+    // 多要素評価 (samples を使う)。samples が無い時はフォールバック。
+    const score = samples && samples.length >= 4
+      ? calcScoreFromSamples(samples)
+      : calcScore(peakDelta);
     lastScore = score;
     const lv = levelFor(score);
 
