@@ -30,7 +30,7 @@ qr.make(fit=True)
 img = qr.make_image(
     image_factory=StyledPilImage,
     module_drawer=RoundedModuleDrawer(radius_ratio=1.0),
-    color_mask=SolidFillColorMask(back_color=(255, 255, 255), front_color=INK[:3]),
+    color_mask=SolidFillColorMask(back_color=(255, 255, 255), front_color=RED[:3]),
 ).convert('RGBA')
 
 W, H = img.size
