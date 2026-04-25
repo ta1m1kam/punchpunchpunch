@@ -1,5 +1,5 @@
 """
-Generate a cute QR code with 🥊 emoji at center for the punch-power site.
+Generate a cute QR code with 🥊 emoji at center for the punchpunchpunch site.
 - Rounded module dots (kawaii pixel grid)
 - White/yellow/red layered emoji badge at center
 - High error correction (H, ~30%) so emoji overlay stays scannable
@@ -11,7 +11,7 @@ from qrcode.image.styles.moduledrawers.pil import RoundedModuleDrawer
 from qrcode.image.styles.colormasks import SolidFillColorMask
 import math
 
-URL = 'https://ta1m1kam.github.io/punch-power/'
+URL = 'https://ta1m1kam.github.io/punchpunchpunch/'
 EMOJI = '🥊'
 RED = (255, 43, 59, 255)
 YELLOW = (255, 217, 26, 255)

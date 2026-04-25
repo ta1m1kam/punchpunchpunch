@@ -17,7 +17,7 @@ import math
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-SITE = 'https://ta1m1kam.github.io/punch-power'
+SITE = 'https://ta1m1kam.github.io/punchpunchpunch'
 
 LEVELS = [
     ('人間', '赤ちゃん',             'お前ほんとにパンチした？'),
