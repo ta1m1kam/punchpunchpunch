@@ -1068,6 +1068,95 @@
     });
   }
 
+  // Measure-phase BGM: tense bass drone + rising lead + accelerating hats + kicks
+  function playMeasureBgm(durationMs) {
+    if (!audioOn()) return () => {};
+    const ctx = audioCtx;
+    const t0 = ctx.currentTime;
+    const tEnd = t0 + durationMs / 1000;
+    const stops = [];
+
+    // 1) Bass drone — sawtooth A1 (~55Hz), low-pass widening over time
+    const bass = ctx.createOscillator();
+    const bassFilter = ctx.createBiquadFilter();
+    const bassGain = ctx.createGain();
+    bass.type = 'sawtooth';
+    bass.frequency.setValueAtTime(55, t0);
+    bassFilter.type = 'lowpass';
+    bassFilter.frequency.setValueAtTime(160, t0);
+    bassFilter.frequency.linearRampToValueAtTime(800, tEnd);
+    bassFilter.Q.value = 1.2;
+    bassGain.gain.setValueAtTime(0, t0);
+    bassGain.gain.linearRampToValueAtTime(0.09, t0 + 0.18);
+    bassGain.gain.linearRampToValueAtTime(0.13, tEnd - 0.05);
+    bassGain.gain.exponentialRampToValueAtTime(0.001, tEnd);
+    bass.connect(bassFilter).connect(bassGain).connect(ctx.destination);
+    bass.start(t0); bass.stop(tEnd + 0.05);
+    stops.push(bass);
+
+    // 2) Rising lead synth — square sweep 220→880Hz, bandpass shimmer
+    const lead = ctx.createOscillator();
+    const leadFilter = ctx.createBiquadFilter();
+    const leadGain = ctx.createGain();
+    lead.type = 'square';
+    lead.frequency.setValueAtTime(220, t0);
+    lead.frequency.exponentialRampToValueAtTime(880, tEnd);
+    leadFilter.type = 'bandpass';
+    leadFilter.frequency.setValueAtTime(900, t0);
+    leadFilter.frequency.exponentialRampToValueAtTime(2400, tEnd);
+    leadFilter.Q.value = 5;
+    leadGain.gain.setValueAtTime(0, t0);
+    leadGain.gain.linearRampToValueAtTime(0.05, t0 + 0.4);
+    leadGain.gain.linearRampToValueAtTime(0.07, tEnd - 0.05);
+    leadGain.gain.exponentialRampToValueAtTime(0.001, tEnd);
+    lead.connect(leadFilter).connect(leadGain).connect(ctx.destination);
+    lead.start(t0); lead.stop(tEnd + 0.05);
+    stops.push(lead);
+
+    // 3) Accelerating hi-hat ticks (filtered noise bursts)
+    let beatT = 0, i = 0;
+    while (beatT < durationMs - 50) {
+      const tickT = t0 + beatT / 1000;
+      const len = Math.max(8, Math.floor(ctx.sampleRate * 0.04));
+      const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let k = 0; k < len; k++) d[k] = (Math.random() * 2 - 1) * Math.pow(1 - k/len, 0.6);
+      const src = ctx.createBufferSource(); src.buffer = buf;
+      const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 6500;
+      const g = ctx.createGain();
+      const intensity = 0.035 + (beatT / durationMs) * 0.06;
+      g.gain.setValueAtTime(intensity, tickT);
+      g.gain.exponentialRampToValueAtTime(0.001, tickT + 0.045);
+      src.connect(hp).connect(g).connect(ctx.destination);
+      src.start(tickT);
+      // accelerate: 180ms → 70ms
+      const interval = Math.max(70, 180 - i * 6);
+      beatT += interval;
+      i++;
+    }
+
+    // 4) Kick drum every ~620ms — sine thump 80→40Hz
+    let kickT = 0;
+    while (kickT < durationMs - 60) {
+      const kt = t0 + kickT / 1000;
+      const k = ctx.createOscillator();
+      const kg = ctx.createGain();
+      k.type = 'sine';
+      k.frequency.setValueAtTime(95, kt);
+      k.frequency.exponentialRampToValueAtTime(38, kt + 0.18);
+      kg.gain.setValueAtTime(0.42, kt);
+      kg.gain.exponentialRampToValueAtTime(0.001, kt + 0.22);
+      k.connect(kg).connect(ctx.destination);
+      k.start(kt); k.stop(kt + 0.24);
+      kickT += 620;
+    }
+
+    // Return stop fn (for early abort)
+    return () => {
+      try { stops.forEach(o => o.stop()); } catch (e) {}
+    };
+  }
+
   function sfxCountBeep(isGo) {
     if (!audioOn()) return;
     const ctx = audioCtx; const t = ctx.currentTime;
@@ -1257,6 +1346,7 @@
     $('liveG').textContent = '0.00';
 
     const DURATION = 2500;
+    const stopBgm = playMeasureBgm(DURATION);
     const t0 = performance.now();
     await new Promise((resolve) => {
       function tick() {
@@ -1271,6 +1361,7 @@
 
     measuring = false;
     stopListening();
+    stopBgm();
 
     // result
     showResult(peak, peakRaw);
