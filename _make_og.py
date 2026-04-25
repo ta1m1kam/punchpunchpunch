@@ -139,9 +139,9 @@ def make_level_og(level, tier, archetype, verdict, score_lo, score_hi):
 
     draw = ImageDraw.Draw(img)
 
-    # Brand bar top-left: "PUNCH POWER!!"
-    brand_font = ImageFont.truetype(IMPACT, size=46)
-    draw_text_with_outline(draw, (60 + 8, 56), 'PUNCH POWER!!',
+    # Brand bar top-left
+    brand_font = ImageFont.truetype(JP_FONT, size=36)
+    draw_text_with_outline(draw, (60 + 8, 56), 'パンチパンチパンチ',
                            font=brand_font, fill=WHITE, outline=INK,
                            shadow=(RED, 4, 4), outline_width=3, anchor='lm')
 
@@ -207,21 +207,23 @@ def make_main_og():
 
     draw = ImageDraw.Draw(img)
 
-    # Big PUNCH POWER!! title (two lines, comic)
-    t1 = 'PUNCH'
-    t2 = 'POWER!!'
-    f1 = ImageFont.truetype(IMPACT, size=200)
-    f2 = ImageFont.truetype(IMPACT, size=200)
-    draw_text_with_outline(draw, (W // 2, 180), t1, font=f1, fill=WHITE,
-                           outline=INK, shadow=(RED, 12, 12), outline_width=6, anchor='mm')
-    draw_text_with_outline(draw, (W // 2 + 12, 360), t2, font=f2, fill=YELLOW,
-                           outline=INK, shadow=(RED, 12, 12), outline_width=6, anchor='mm')
+    # Hero: パンチ × 3 (stacked, alternating color, slight offsets for shonen energy)
+    hero_font = ImageFont.truetype(JP_FONT, size=180)
+    rows = [
+        ('パンチ',  WHITE,  -10, 90),
+        ('パンチ',  YELLOW, +14, 240),
+        ('パンチ!!', WHITE, -6, 400),
+    ]
+    for text, fill, dx, y in rows:
+        draw_text_with_outline(
+            draw, (W // 2 + dx, y), text,
+            font=hero_font, fill=fill,
+            outline=INK, shadow=(RED, 12, 12),
+            outline_width=6, anchor='mm',
+        )
 
     # Subtitle
-    sf = ImageFont.truetype(JP_FONT, size=44)
-    draw.text((W // 2, H - 110), '加速度センサーパンチングマシーン',
-              font=sf, fill=WHITE, anchor='mm')
-    sf2 = ImageFont.truetype(IMPACT, size=36)
+    sf2 = ImageFont.truetype(IMPACT, size=44)
     draw.text((W // 2, H - 56), '0–200 PWR / SCAN & PUNCH ME!!',
               font=sf2, fill=YELLOW, anchor='mm')
 
@@ -241,17 +243,17 @@ def make_landing_pages():
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>PUNCH POWER!! / Lv.{lv} {archetype}</title>
+<title>パンチパンチパンチ / Lv.{lv} {archetype}</title>
 <meta name="description" content="{verdict} お前のパンチ力は何点だ？" />
 <meta property="og:type" content="website" />
-<meta property="og:title" content="VS {archetype} (Lv.{lv}) / PUNCH POWER!!" />
+<meta property="og:title" content="VS {archetype} (Lv.{lv}) / パンチパンチパンチ" />
 <meta property="og:description" content="{verdict} お前も殴って倒せ！" />
 <meta property="og:image" content="{site}/og/lv-{lv}.png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta property="og:url" content="{site}/c/{lv}/" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="VS {archetype} (Lv.{lv}) / PUNCH POWER!!" />
+<meta name="twitter:title" content="VS {archetype} (Lv.{lv}) / パンチパンチパンチ" />
 <meta name="twitter:description" content="{verdict}" />
 <meta name="twitter:image" content="{site}/og/lv-{lv}.png" />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='86'>🥊</text></svg>" />

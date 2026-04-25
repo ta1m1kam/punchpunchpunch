@@ -4,8 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
 <meta name="theme-color" content="#0a0a0f" />
-<meta name="description" content="スマホの加速度センサーでパンチの威力を測るパンチングマシーン。気合入れて殴れ！" />
-<meta property="og:title" content="PUNCH POWER!! - 加速度パンチングマシーン" />
+<meta name="description" content="パンチパンチパンチ！スマホ握って思いっきり殴れ。" />
+<meta property="og:title" content="パンチパンチパンチ" />
 <meta property="og:description" content="スマホ握って思いっきり殴れ。0–200 PWR / 20階層で「人間→超人」を判定。" />
 <meta property="og:type" content="website" />
 <meta property="og:image" content="https://ta1m1kam.github.io/punch-power/og/main.png" />
@@ -13,10 +13,10 @@
 <meta property="og:image:height" content="630" />
 <meta property="og:url" content="https://ta1m1kam.github.io/punch-power/" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="PUNCH POWER!! - 加速度パンチングマシーン" />
+<meta name="twitter:title" content="パンチパンチパンチ" />
 <meta name="twitter:description" content="スマホ握って思いっきり殴れ。お前のパンチ力は何点だ？" />
 <meta name="twitter:image" content="https://ta1m1kam.github.io/punch-power/og/main.png" />
-<title>PUNCH POWER!! / 加速度パンチングマシーン</title>
+<title>パンチパンチパンチ</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='86'>🥊</text></svg>" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -935,7 +935,7 @@
   <div class="desktop-note" id="desktopNote">
     <div class="card">
       <h2>📱 OPEN ON PHONE</h2>
-      <p class="ja">このサイトはスマホ専用！加速度センサーが必要だから、QRコードからスマホで開いてくれ。</p>
+      <p class="ja">このサイトはスマホ専用！QRコードからスマホで開いてくれ。</p>
     </div>
   </div>
 
@@ -1043,7 +1043,7 @@
   // ---------- START button ----------
   function showSensorErr(status) {
     $('errMsg').innerHTML = status === 'unsupported'
-      ? 'この端末は加速度センサー非対応みたい。<br/>スマホで試してみてくれ！'
+      ? 'この端末はセンサー非対応みたい。<br/>スマホで試してみてくれ！'
       : 'センサーが拒否されちゃった。<br/>ブラウザの設定からモーション/方位をONにしてリトライ！';
     show('error');
   }
