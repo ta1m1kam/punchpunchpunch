@@ -140,8 +140,8 @@ def make_level_og(level, tier, archetype, verdict, score_lo, score_hi):
     draw = ImageDraw.Draw(img)
 
     # Brand bar top-left
-    brand_font = ImageFont.truetype(JP_FONT, size=36)
-    draw_text_with_outline(draw, (60 + 8, 56), 'パンチパンチパンチ',
+    brand_font = ImageFont.truetype(IMPACT, size=42)
+    draw_text_with_outline(draw, (60 + 8, 56), 'PUNCH PUNCH PUNCH',
                            font=brand_font, fill=WHITE, outline=INK,
                            shadow=(RED, 4, 4), outline_width=3, anchor='lm')
 
@@ -207,12 +207,12 @@ def make_main_og():
 
     draw = ImageDraw.Draw(img)
 
-    # Hero: パンチ × 3 (stacked, alternating color, slight offsets for shonen energy)
-    hero_font = ImageFont.truetype(JP_FONT, size=180)
+    # Hero: PUNCH × 3 (stacked, alternating color, slight offsets for shonen energy)
+    hero_font = ImageFont.truetype(IMPACT, size=190)
     rows = [
-        ('パンチ',  WHITE,  -10, 90),
-        ('パンチ',  YELLOW, +14, 240),
-        ('パンチ!!', WHITE, -6, 400),
+        ('PUNCH',   WHITE,  -12, 110),
+        ('PUNCH',   YELLOW, +18, 290),
+        ('PUNCH!!', WHITE,  -8,  470),
     ]
     for text, fill, dx, y in rows:
         draw_text_with_outline(
@@ -223,8 +223,8 @@ def make_main_og():
         )
 
     # Subtitle
-    sf2 = ImageFont.truetype(IMPACT, size=44)
-    draw.text((W // 2, H - 56), '0–200 PWR / SCAN & PUNCH ME!!',
+    sf2 = ImageFont.truetype(IMPACT, size=36)
+    draw.text((W // 2, H - 28), '0–200 PWR / SCAN & PUNCH ME!!',
               font=sf2, fill=YELLOW, anchor='mm')
 
     # 🥊 emoji corners
@@ -243,17 +243,17 @@ def make_landing_pages():
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>パンチパンチパンチ / Lv.{lv} {archetype}</title>
+<title>PUNCH PUNCH PUNCH / Lv.{lv} {archetype}</title>
 <meta name="description" content="{verdict} お前のパンチ力は何点だ？" />
 <meta property="og:type" content="website" />
-<meta property="og:title" content="VS {archetype} (Lv.{lv}) / パンチパンチパンチ" />
+<meta property="og:title" content="VS {archetype} (Lv.{lv}) / PUNCH PUNCH PUNCH" />
 <meta property="og:description" content="{verdict} お前も殴って倒せ！" />
 <meta property="og:image" content="{site}/og/lv-{lv}.png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta property="og:url" content="{site}/c/{lv}/" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="VS {archetype} (Lv.{lv}) / パンチパンチパンチ" />
+<meta name="twitter:title" content="VS {archetype} (Lv.{lv}) / PUNCH PUNCH PUNCH" />
 <meta name="twitter:description" content="{verdict}" />
 <meta name="twitter:image" content="{site}/og/lv-{lv}.png" />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='86'>🥊</text></svg>" />

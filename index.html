@@ -4,8 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
 <meta name="theme-color" content="#0a0a0f" />
-<meta name="description" content="パンチパンチパンチ！スマホ握って思いっきり殴れ。" />
-<meta property="og:title" content="パンチパンチパンチ" />
+<meta name="description" content="PUNCH PUNCH PUNCH！スマホ握って思いっきり殴れ。" />
+<meta property="og:title" content="PUNCH PUNCH PUNCH" />
 <meta property="og:description" content="スマホ握って思いっきり殴れ。0–200 PWR / 20階層で「人間→超人」を判定。" />
 <meta property="og:type" content="website" />
 <meta property="og:image" content="https://ta1m1kam.github.io/punchpunchpunch/og/main.png" />
@@ -13,10 +13,10 @@
 <meta property="og:image:height" content="630" />
 <meta property="og:url" content="https://ta1m1kam.github.io/punchpunchpunch/" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="パンチパンチパンチ" />
+<meta name="twitter:title" content="PUNCH PUNCH PUNCH" />
 <meta name="twitter:description" content="スマホ握って思いっきり殴れ。お前のパンチ力は何点だ？" />
 <meta name="twitter:image" content="https://ta1m1kam.github.io/punchpunchpunch/og/main.png" />
-<title>パンチパンチパンチ</title>
+<title>PUNCH PUNCH PUNCH</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='86'>🥊</text></svg>" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -112,8 +112,8 @@
 
   .title {
     font-family: 'Anton', 'Impact', sans-serif;
-    font-size: clamp(58px, 17vw, 130px);
-    line-height: 0.82;
+    font-size: clamp(48px, 14vw, 110px);
+    line-height: 0.86;
     letter-spacing: -0.01em;
     text-align: center;
     font-style: italic;
@@ -127,7 +127,9 @@
   }
   .title .accent { color: var(--yellow); }
   .title .row { display: block; }
-  .title .row.shift { transform: translateX(8px) rotate(-1deg); }
+  .title .row:nth-child(1) { transform: translateX(-6px) rotate(-1deg); }
+  .title .row.shift { transform: translateX(10px) rotate(1deg); }
+  .title .row:nth-child(3) { transform: translateX(-2px) rotate(-0.5deg); }
 
   .sub {
     font-family: 'Reggae One', system-ui, sans-serif;
@@ -833,7 +835,8 @@
         <span class="badge"><span class="dot"></span> SMARTPHONE ONLY</span>
         <h1 class="title">
           <span class="row">PUNCH</span>
-          <span class="row shift accent">POWER!!</span>
+          <span class="row shift accent">PUNCH</span>
+          <span class="row">PUNCH!!</span>
         </h1>
         <span class="sub ja">スマホ握って、思いっきり殴れ。</span>
 
@@ -1659,7 +1662,7 @@
     const text = `俺のパンチ力は ${score}/200 PWR、判定『${lv.title}』だった！！ お前も殴れ → `;
     const url = location.origin + location.pathname;
     if (navigator.share) {
-      try { await navigator.share({ title: 'PUNCH POWER!!', text, url }); return; } catch(e) {}
+      try { await navigator.share({ title: 'PUNCH PUNCH PUNCH', text, url }); return; } catch(e) {}
     }
     try {
       await navigator.clipboard.writeText(text + url);
