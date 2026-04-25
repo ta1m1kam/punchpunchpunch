@@ -320,7 +320,7 @@
   }
 
   /* ---------- RESULT ---------- */
-  .rank-wrap { display: grid; place-items: center; gap: 10px; width: 100%; max-width: 460px; }
+  .rank-wrap { display: grid; place-items: center; gap: 6px; width: 100%; max-width: 460px; }
 
   .tier-badge {
     font-family: 'Anton', sans-serif;
@@ -347,14 +347,14 @@
 
   .rank {
     font-family: 'Anton', sans-serif;
-    font-size: clamp(120px, 38vw, 240px);
+    font-size: clamp(96px, 30vw, 200px);
     line-height: 0.85;
     font-style: italic;
     color: var(--yellow);
     text-shadow:
       -3px -3px 0 var(--ink), 3px -3px 0 var(--ink),
       -3px 3px 0 var(--ink), 3px 3px 0 var(--ink),
-      12px 12px 0 var(--red);
+      10px 10px 0 var(--red);
     animation: rankIn 0.7s cubic-bezier(.17,.67,.42,1.36) both;
     letter-spacing: -0.02em;
     font-feature-settings: 'tnum';
@@ -377,7 +377,8 @@
   }
 
   .archetype-wrap {
-    display: grid; place-items: center; gap: 4px;
+    display: grid; place-items: center; gap: 2px;
+    margin-top: 2px;
     animation: rankIn 0.7s 0.15s cubic-bezier(.17,.67,.42,1.36) both;
   }
   .archetype-label {
@@ -388,15 +389,15 @@
   }
   .archetype {
     font-family: 'Reggae One', sans-serif;
-    font-size: clamp(24px, 7vw, 38px);
+    font-size: clamp(20px, 6.2vw, 32px);
     color: var(--ink);
     background: var(--yellow);
-    padding: 8px 20px;
+    padding: 5px 16px;
     border: 3px solid var(--ink);
     box-shadow: 4px 4px 0 var(--red);
     transform: rotate(-1.5deg);
     text-align: center;
-    line-height: 1.1;
+    line-height: 1.15;
     max-width: 92vw;
   }
   .archetype.super {
@@ -432,18 +433,19 @@
 
   .verdict {
     font-family: 'Reggae One', sans-serif;
-    font-size: clamp(20px, 5.5vw, 28px);
+    font-size: clamp(16px, 4.6vw, 22px);
     color: var(--white);
     background: var(--red);
     border: 2px solid var(--ink);
-    padding: 8px 16px;
+    padding: 5px 12px;
     transform: rotate(2deg);
-    box-shadow: 4px 4px 0 var(--ink);
+    box-shadow: 3px 3px 0 var(--ink);
     text-align: center;
+    line-height: 1.25;
   }
 
   .stats {
-    display: flex; gap: 8px; justify-content: center;
+    display: flex; gap: 6px; justify-content: center;
     margin-top: 2px;
     width: 100%;
   }
@@ -451,13 +453,34 @@
     display: grid; gap: 0; place-items: center;
     background: rgba(255,255,255,0.05);
     border: 1px solid rgba(255,255,255,0.18);
-    padding: 6px 8px;
+    padding: 4px 6px;
     flex: 1; min-width: 0;
   }
-  .stat .k { font-size: 9px; color: var(--yellow); letter-spacing: 0.18em; }
-  .stat .v { font-family: 'Anton', sans-serif; font-size: 22px; }
+  .stat .k { font-size: 8px; color: var(--yellow); letter-spacing: 0.16em; }
+  .stat .v { font-family: 'Anton', sans-serif; font-size: 18px; line-height: 1.1; }
 
   .actions { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin-top: 14px; }
+  /* Result-screen action grid: primary full-width, secondaries side-by-side */
+  #result .actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%; max-width: 380px;
+    margin-top: 6px;
+  }
+  #result .actions .cta { margin-top: 0; }
+  #result .actions .cta-wide { grid-column: 1 / -1; }
+  /* Smaller CTA on result screen to save vertical space */
+  #result .actions .cta {
+    padding: 12px 18px;
+    font-size: clamp(18px, 5vw, 26px);
+    box-shadow: 4px 4px 0 var(--ink), 8px 8px 0 var(--yellow);
+  }
+  #result .actions .cta:active {
+    box-shadow: 0 0 0 var(--ink), 4px 4px 0 var(--yellow);
+  }
+  #result .actions .cta.ghost { box-shadow: 3px 3px 0 var(--white); }
+  #result .actions .cta.ghost:active { box-shadow: 0 0 0 var(--white); }
 
   /* GLASS BREAK FX (crossing 100 = breaking the human ceiling) */
   .glass-fx {
@@ -882,7 +905,7 @@
           <div class="stat"><span class="k">HI</span><span class="v" id="hiInline">0</span></div>
         </div>
         <div class="actions">
-          <button class="cta alt" id="btn-retry">もう一発!!</button>
+          <button class="cta alt cta-wide" id="btn-retry">もう一発!!</button>
           <button class="cta" id="btn-tshirt">挑戦URL</button>
           <button class="cta ghost" id="btn-share">SHARE</button>
         </div>
